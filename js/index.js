@@ -5,6 +5,12 @@ const ctx = canvas.getContext("2d");
 
 let player;
 let direction;
+let keys = {
+    topOne: false,
+    downOne: false,
+    topTwo: false,
+    downTwo: false
+}
 
 let gameOn = false;
 
@@ -43,16 +49,19 @@ const leftPlayer = {
     player: "left",
     speed: 2,
     score: 0,
-    moveUp: function () {
-        if (this.positionY >= 0) {
-            this.positionY = this.positionY - 10;
-        }
+    update: function () {
+        this.draw();
+        this.positionY += this.speed;
     },
-    moveDown: function () {
-        if (this.positionY + leftPlayer.height <= canvas.height) {
-            this.positionY = this.positionY + 10;
-        }
-    },
+    draw: function () {
+        drawRect(
+        leftPlayer.positionX,
+        leftPlayer.positionY,
+        leftPlayer.width,
+        leftPlayer.height,
+        leftPlayer.color
+        );
+    }
 };
 
 const rightPlayer = {
@@ -62,18 +71,21 @@ const rightPlayer = {
     height: 100,
     color: "white",
     player: "right",
-    speed: 2,
+    speed: 0,
     score: 0,
-    moveUp: function () {
-        if (this.positionY >= 0) {
-            this.positionY = this.positionY - 10;
-        }
+    update: function () {
+        this.draw();
+        this.positionY += this.speed;
     },
-    moveDown: function () {
-        if (this.positionY + leftPlayer.height <= canvas.height) {
-            this.positionY = this.positionY + 10;
-        }
-    },
+    draw: function () {
+        drawRect(
+        rightPlayer.positionX,
+        rightPlayer.positionY,
+        rightPlayer.width,
+        rightPlayer.height,
+        rightPlayer.color
+        );
+    }
 };
 
 // ============================================================================
@@ -96,16 +108,33 @@ window.onload = () => {
     document.addEventListener("keydown", (e) => {
         switch (e.keyCode) {
             case 38:
-                rightPlayer.moveUp();
+                keys.topTwo = true;
                 break;
             case 40:
-                rightPlayer.moveDown();
+                keys.downTwo = true;
                 break;
             case 87:
-                leftPlayer.moveUp();
+                keys.topOne = true;
                 break;
             case 83:
-                leftPlayer.moveDown();
+                keys.downOne = true;
+                break;
+        }
+    });
+
+    document.addEventListener("keyup", (e) => {
+        switch (e.keyCode) {
+            case 38:
+                keys.topTwo = false;
+                break;
+            case 40:
+                keys.downTwo = false;
+                break;
+            case 87:
+                keys.topOne = false;
+                break;
+            case 83:
+                keys.downOne = false;
                 break;
         }
     });
@@ -121,8 +150,8 @@ function startGame() {
 
     gameOn = true;
 
-    gameLoop();
-    drawLoop();
+    animate();
+    // drawLoop();
 
     startDiv.style.display = "none";
     canvas.style.display = "block";
@@ -136,25 +165,103 @@ function startGame() {
 }
 
 // gameLoop manages the game state on the specified interval.
-function gameLoop() {
-    gameIntervalId = setInterval(() => {
-        updateCanvas();
-        // console.log('update all')
-    }, 1000 / framesPerSecond);
-}
+// function gameLoop() {
+//     gameIntervalId = setInterval(() => {
+//         updateCanvas();
+//         // console.log('update all')
+//     }, 1000 / framesPerSecond);
+// }
 
 // drawLoop renders the game ui and updates the ui on the specified interval.
-function drawLoop() {
-    arenaIntervalId = setInterval(() => {
-        drawBoard();
-        // console.log(' draw all')
-    }, 1000 / framesPerSecond);
-}
+// function drawLoop() {
+//     arenaIntervalId = setInterval(() => {
+//         drawBoard();
+//         // console.log(' draw all')
+//     }, 1000 / framesPerSecond);
+// }
 
 // ============================================================================
 
-// updateCanvas does the following.
-function updateCanvas() {
+function animate () {
+    animationId = requestAnimationFrame(animate);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    drawRect(0, 0, canvas.width, canvas.height, "black");
+    drawNet();
+
+    // Draw the left player score.
+    drawText(leftPlayer.score, canvas.width / 4, canvas.height / 5, "white");
+
+    // Draw the right player score.
+    drawText(
+        rightPlayer.score,
+        (3 * canvas.width) / 4,
+        canvas.height / 5,
+        "white"
+    );
+
+    drawBall(ball.x, ball.y, 10, "white");
+
+    if(leftPlayer.positionY + leftPlayer.height > canvas.height) {
+        keys.downOne = false;
+        if (keys.topOne) {
+            leftPlayer.speed = -12;
+        } else if (keys.downOne) {
+            leftPlayer.speed = 12;
+        } else {
+            leftPlayer.speed = 0;
+        }
+    } else if (leftPlayer.positionY < 0){
+        keys.topOne = false;
+        if (keys.topOne) {
+            leftPlayer.speed = -12;
+        } else if (keys.downOne) {
+            leftPlayer.speed = 12;
+        } else {
+            leftPlayer.speed = 0;
+        }
+    } else {
+        if (keys.topOne) {
+            leftPlayer.speed = -12;
+        } else if (keys.downOne) {
+            leftPlayer.speed = 12;
+        } else {
+            leftPlayer.speed = 0;
+        }
+    }
+
+    if(rightPlayer.positionY + rightPlayer.height > canvas.height) {
+        keys.downTwo = false;
+        if (keys.topTwo) {
+            rightPlayer.speed = -12;
+        } else if (keys.downTwo) {
+            rightPlayer.speed = 12;
+        } else {
+            rightPlayer.speed = 0;
+        }
+    } else if (rightPlayer.positionY < 0){
+        keys.topTwo = false;
+        if (keys.topTwo) {
+            rightPlayer.speed = -12;
+        } else if (keys.downTwo) {
+            rightPlayer.speed = 12;
+        } else {
+            rightPlayer.speed = 0;
+        }
+    } else {
+        if (keys.topTwo) {
+            rightPlayer.speed = -12;
+        } else if (keys.downTwo) {
+            rightPlayer.speed = 12;
+        } else {
+            rightPlayer.speed = 0;
+        }
+    }
+
+    rightPlayer.update();
+    leftPlayer.update();
+
     moveBall();
 
     switch (true) {
@@ -175,6 +282,29 @@ function updateCanvas() {
             checkGameOver();
     }
 }
+
+// updateCanvas does the following.
+// function updateCanvas() {
+//     moveBall();
+
+//     switch (true) {
+//         case isWallCollision(ball):
+//             handleWallCollision();
+//             break;
+
+//         case isPaddleCollision(ball, rightPlayer):
+//             handlePaddleCollision(rightPlayer);
+//             break;
+
+//         case isPaddleCollision(ball, leftPlayer):
+//             handlePaddleCollision(leftPlayer);
+//             break;
+
+//         default:
+//             checkPointScored();
+//             checkGameOver();
+//     }
+// }
 
 // moveBall changes the position of the ball by the current velocity.
 function moveBall() {
@@ -279,8 +409,7 @@ function checkGameOver() {
 
     gameOn = false;
 
-    clearInterval(gameIntervalId);
-    clearInterval(arenaIntervalId);
+    cancelAnimationFrame(animationId);
 
     let text;
     switch (true) {
@@ -326,24 +455,6 @@ function drawBoard() {
         (3 * canvas.width) / 4,
         canvas.height / 5,
         "white"
-    );
-
-    // Draw the left paddle.
-    drawRect(
-        leftPlayer.positionX,
-        leftPlayer.positionY,
-        leftPlayer.width,
-        leftPlayer.height,
-        leftPlayer.color
-    );
-
-    // Draw the right paddle.
-    drawRect(
-        rightPlayer.positionX,
-        rightPlayer.positionY,
-        rightPlayer.width,
-        rightPlayer.height,
-        rightPlayer.color
     );
 
     drawBall(ball.x, ball.y, 10, "white");
